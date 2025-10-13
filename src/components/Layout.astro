@@ -1,0 +1,17 @@
+---
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+---
+
+<html lang="en">
+  <head>
+    <slot name="head" />
+  </head>
+  <body>
+    <Nav />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

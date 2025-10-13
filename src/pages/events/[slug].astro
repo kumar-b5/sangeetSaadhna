@@ -1,0 +1,9 @@
+---
+export interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.params;
+---
+
+<h1>Event: {slug}</h1>
