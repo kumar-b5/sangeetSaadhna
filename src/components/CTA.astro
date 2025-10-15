@@ -1,7 +1,95 @@
 ---
-// TODO: Add props for CTA content
+interface Props {
+  eyebrow?: string;
+  heading: string;
+  body?: string;
+  buttonLabel?: string;
+  buttonHref?: string;
+  variant?: 'primary' | 'outline';
+}
+
+const {
+  eyebrow,
+  heading,
+  body,
+  buttonLabel = 'Join the community',
+  buttonHref = '/contact',
+  variant = 'primary',
+} = Astro.props as Props;
 ---
 
-<section>
-  <!-- TODO: Implement call-to-action component -->
+<section class:list={{ 'cta-shell': true, outline: variant === 'outline' }}>
+  <div class="cta-shell__content">
+    {eyebrow && <span class="cta-shell__eyebrow">{eyebrow}</span>}
+    <h2>{heading}</h2>
+    {body && <p>{body}</p>}
+  </div>
+  {buttonLabel && buttonHref && (
+    <a class:list={{ btn: true, outline: variant === 'outline' }} href={buttonHref}>
+      {buttonLabel}
+    </a>
+  )}
 </section>
+
+<style>
+  .cta-shell {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 3vw, 1.5rem);
+    align-items: flex-start;
+    background: linear-gradient(135deg, rgba(75, 29, 149, 0.92), rgba(13, 148, 136, 0.88));
+    color: #fff;
+    padding: clamp(2rem, 5vw, 3rem);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.25), transparent 58%);
+    pointer-events: none;
+  }
+
+  .cta-shell.outline {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid rgba(75, 29, 149, 0.18);
+  }
+
+  .cta-shell h2 {
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    max-width: 26ch;
+  }
+
+  .cta-shell p {
+    max-width: 38ch;
+    color: inherit;
+  }
+
+  .cta-shell__eyebrow {
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+
+  .cta-shell.outline .btn {
+    background: var(--color-primary);
+    color: #fff;
+  }
+
+  @media (max-width: 640px) {
+    .cta-shell {
+      align-items: stretch;
+    }
+
+    .btn {
+      justify-content: center;
+    }
+  }
+</style>

@@ -1,0 +1,27 @@
+{
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "check:a11y": "astro check --experimental-a11y",
+    "deploy": "npm run build && firebase deploy --only hosting"
+  },
+  "dependencies": {
+    "@portabletext/to-html": "^2.0.12",
+    "@sanity/client": "^7.12.0",
+    "firebase": "^12.4.0",
+    "groq": "^3.47.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/tailwind": "^5.1.0",
+    "@portabletext/types": "^2.0.13",
+    "@types/node": "^22.9.0",
+    "astro": "^4.15.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.3"
+  }
+}

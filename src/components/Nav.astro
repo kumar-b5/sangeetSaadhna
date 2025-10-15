@@ -1,7 +1,193 @@
 ---
-// TODO: Add props if needed
+interface Props {
+  currentPath?: string;
+}
+
+const { currentPath = '/' } = Astro.props as Props;
+
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
+  { href: '/mission', label: 'Mission' },
+  { href: '/events', label: 'Events' },
+  { href: '/contact', label: 'Contact' },
+  // Donation intentionally hidden from main nav; kept here for future re-enable
+  { href: '/donation', label: 'Donation', hidden: true },
+];
+
+const isActive = (href: string) =>
+  currentPath === href || (href !== '/' && currentPath.startsWith(`${href}/`));
 ---
 
-<nav>
-  <!-- TODO: Implement Nav component -->
+<nav class="nav">
+  <div class="container nav__inner">
+    <a class="nav__brand" href="/">
+      <span class="nav__brand-mark">Sangeet</span>
+      <span>Saadhna</span>
+    </a>
+    <details class="nav__mobile" role="presentation">
+      <summary class="nav__toggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </summary>
+      <div class="nav__links nav__links--mobile">
+        {links
+          .filter((link) => !link.hidden)
+          .map(({ href, label }) => (
+            <a class:list={{ link: true, active: isActive(href) }} href={href}>
+              {label}
+            </a>
+          ))}
+        <a class="btn nav__cta" href="/donation">Support the Sabha</a>
+      </div>
+    </details>
+    <div class="nav__links nav__links--desktop">
+      {links
+        .filter((link) => !link.hidden)
+        .map(({ href, label }) => (
+          <a class:list={{ link: true, active: isActive(href) }} href={href}>
+            {label}
+          </a>
+        ))}
+    </div>
+    <a class="btn nav__cta" href="/donation">Support the Sabha</a>
+  </div>
 </nav>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(16px);
+    background: rgba(255, 251, 242, 0.9);
+    border-bottom: 1px solid rgba(75, 29, 149, 0.08);
+  }
+
+  .nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0;
+  }
+
+  .nav__brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    font-family: var(--font-heading);
+    font-size: clamp(1.2rem, 2vw, 1.45rem);
+    font-weight: 600;
+    color: var(--color-primary-dark);
+  }
+
+  .nav__brand-mark {
+    color: var(--color-secondary);
+  }
+
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .nav__links--mobile {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.5rem;
+    background: var(--color-surface);
+    border-radius: var(--radius-base);
+    margin-top: 1rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(75, 29, 149, 0.12);
+  }
+
+  .nav__links--desktop {
+    display: none;
+  }
+
+  .link {
+    font-weight: 500;
+    color: var(--color-text-muted);
+    padding: 0.35rem 0;
+    position: relative;
+  }
+
+  .link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.35rem;
+    width: 0;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 999px;
+    transition: width 150ms ease;
+  }
+
+  .link:hover::after,
+  .link:focus-visible::after,
+  .link.active::after {
+    width: 100%;
+  }
+
+  .link.active {
+    color: var(--color-primary-dark);
+  }
+
+  .nav__cta {
+    display: none;
+    white-space: nowrap;
+  }
+
+  .nav__mobile {
+    display: block;
+  }
+
+  .nav__mobile > summary {
+    list-style: none;
+  }
+
+  .nav__toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  .nav__toggle span {
+    width: 22px;
+    height: 2px;
+    background: var(--color-text);
+    border-radius: 999px;
+  }
+
+  .nav__mobile[open] .nav__toggle span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav__mobile[open] .nav__toggle span:first-child {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav__mobile[open] .nav__toggle span:last-child {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  @media (min-width: 960px) {
+    .nav__links--desktop {
+      display: flex;
+    }
+
+    .nav__mobile {
+      display: none;
+    }
+
+    .nav__cta {
+      display: inline-flex;
+    }
+  }
+</style>

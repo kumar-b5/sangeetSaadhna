@@ -1,4 +1,31 @@
-/* TODO: Define design tokens */
 :root {
-  --color-primary: #000000;
+  --color-primary: #4b1d95;
+  --color-primary-dark: #2f0f66;
+  --color-primary-light: #8767d1;
+  --color-secondary: #f59e0b;
+  --color-accent: #0d9488;
+  --color-surface: #fffbf2;
+  --color-surface-muted: #f8f0de;
+  --color-surface-dark: #1d1233;
+  --color-text: #201330;
+  --color-text-muted: #5d4a6f;
+
+  --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Outfit', 'Helvetica Neue', Arial, sans-serif;
+
+  --radius-base: 16px;
+  --radius-sm: 12px;
+  --radius-lg: 24px;
+
+  --shadow-soft: 0 10px 30px -15px rgba(75, 29, 149, 0.35);
+  --shadow-card: 0 18px 45px -25px rgba(32, 19, 48, 0.35);
+}
+
+:root[data-theme='dark'] {
+  --color-surface: #1d1233;
+  --color-surface-muted: #271740;
+  --color-text: #f8f5ff;
+  --color-text-muted: #c7b9d9;
+  --shadow-soft: 0 10px 30px -15px rgba(75, 29, 149, 0.45);
+  --shadow-card: 0 18px 45px -20px rgba(13, 148, 136, 0.35);
 }

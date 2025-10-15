@@ -1,7 +1,152 @@
 ---
-// TODO: Add props if needed
+const year = new Date().getFullYear();
 ---
 
-<footer>
-  <!-- TODO: Implement Footer component -->
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="footer__brand">
+        <span class="mark">Sangeet</span>
+        <span>Saadhna</span>
+      </div>
+      <p class="footer__tagline">
+        Nurturing a collective journey in Indian classical music through monthly community baithaks,
+        workshops, and celebrations.
+      </p>
+      <div class="footer__contact">
+        <span>Email</span>
+        <a href="mailto:rsvp@sangeetsaadhna.org">rsvp@sangeetsaadhna.org</a>
+      </div>
+    </div>
+
+    <div>
+      <h3>Visit Us</h3>
+      <p>
+        Community Hall, 123 Raag Avenue<br />
+        San Francisco Bay Area, CA
+      </p>
+      <a class="footer__map" href="https://maps.google.com" target="_blank" rel="noreferrer">
+        View on Google Maps
+      </a>
+    </div>
+
+    <div>
+      <h3>Stay Connected</h3>
+      <ul>
+        <li>
+          <a href="https://youtube.com" target="_blank" rel="noreferrer">YouTube Channel</a>
+        </li>
+        <li>
+          <a href="https://www.instagram.com" target="_blank" rel="noreferrer">Instagram</a>
+        </li>
+        <li>
+          <a href="https://www.facebook.com" target="_blank" rel="noreferrer">Facebook</a>
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <h3>Join the Sabha</h3>
+      <p>Subscribe for monthly program updates, volunteer calls, and event recaps.</p>
+      <a class="btn" href="/contact">Join the mailing list</a>
+    </div>
+  </div>
+  <div class="footer__bar">
+    <div class="container footer__bar-inner">
+      <span>© {year} Sangeet Saadhna Community.</span>
+      <a href="/donation">Support the Sabha</a>
+    </div>
+  </div>
 </footer>
+
+<style>
+  .footer {
+    margin-top: clamp(4rem, 8vw, 6rem);
+    padding-top: clamp(4rem, 8vw, 6rem);
+    background: radial-gradient(circle at top, rgba(75, 29, 149, 0.08), transparent 55%),
+      var(--color-surface-dark);
+    color: #e7dbf6;
+  }
+
+  .footer h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.75rem;
+    color: #f8fafc;
+  }
+
+  .footer__grid {
+    display: grid;
+    gap: clamp(1.75rem, 3vw, 3rem);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .footer__brand {
+    font-family: var(--font-heading);
+    font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .footer__brand .mark {
+    color: var(--color-secondary);
+  }
+
+  .footer__tagline {
+    margin: 1rem 0;
+    max-width: 28ch;
+    color: rgba(233, 222, 247, 0.85);
+  }
+
+  .footer__contact {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  .footer__contact span {
+    font-weight: 600;
+    color: rgba(246, 236, 255, 0.65);
+  }
+
+  .footer ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .footer a {
+    color: rgba(214, 198, 239, 0.95);
+  }
+
+  .footer__map {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+    font-weight: 500;
+  }
+
+  .footer__bar {
+    margin-top: clamp(3rem, 6vw, 4rem);
+    border-top: 1px solid rgba(214, 198, 239, 0.2);
+    padding: 1.5rem 0;
+  }
+
+  .footer__bar-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.95rem;
+    color: rgba(231, 221, 245, 0.75);
+  }
+
+  @media (max-width: 700px) {
+    .footer__bar-inner {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>

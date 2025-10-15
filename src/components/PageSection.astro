@@ -1,0 +1,119 @@
+---
+import type { PortableTextBlock } from '@portabletext/types';
+import { renderPortableText } from '../lib/portableText';
+
+interface Props {
+  title?: string;
+  intro?: string;
+  content?: PortableTextBlock[];
+  eyebrow?: string;
+  cta?: {
+    heading: string;
+    body?: string;
+    buttonLabel?: string;
+    buttonHref?: string;
+  };
+  variant?: 'default' | 'accent';
+}
+
+const {
+  title,
+  intro,
+  content = [],
+  eyebrow,
+  cta,
+  variant = 'default',
+} = Astro.props as Props;
+---
+
+<section class:list={{ section: true, 'page-section': true, accent: variant === 'accent' }}>
+  <div class="container page-section__inner">
+    <div class="page-section__header">
+      {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+      {title && <h1>{title}</h1>}
+      {intro && <p class="page-section__intro">{intro}</p>}
+    </div>
+    {content && content.length > 0 && (
+      <div class="page-section__body" set:html={renderPortableText(content)} />
+    )}
+    {cta && (
+      <div class="page-section__cta">
+        <h2>{cta.heading}</h2>
+        {cta.body && <p>{cta.body}</p>}
+        {cta.buttonLabel && cta.buttonHref && (
+          <a class="btn" href={cta.buttonHref}>
+            {cta.buttonLabel}
+          </a>
+        )}
+      </div>
+    )}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .page-section__inner {
+    display: grid;
+    gap: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  .page-section__header h1 {
+    font-size: clamp(2rem, 4vw, 2.65rem);
+    margin-bottom: 1rem;
+  }
+
+  .page-section__intro {
+    max-width: 60ch;
+    color: var(--color-text-muted);
+  }
+
+  .page-section__body {
+    display: grid;
+    gap: 1.25rem;
+    line-height: 1.8;
+  }
+
+  .page-section__body h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    margin-top: 2rem;
+  }
+
+  .page-section__body h3 {
+    font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+    margin-top: 1.5rem;
+  }
+
+  .page-section__body p {
+    color: var(--color-text-muted);
+  }
+
+  .page-section__body ul,
+  .page-section__body ol {
+    margin: 0;
+    padding-left: 1.4rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .page-section__body blockquote {
+    padding: 1.5rem 2rem;
+    border-left: 3px solid var(--color-primary);
+    background: rgba(75, 29, 149, 0.08);
+    border-radius: var(--radius-base);
+    font-style: italic;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .page-section__cta {
+    margin-top: 1.5rem;
+    background: linear-gradient(135deg, rgba(75, 29, 149, 0.1), rgba(13, 148, 136, 0.1));
+    border-radius: var(--radius-lg);
+    padding: clamp(1.75rem, 3vw, 2.5rem);
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .page-section.accent {
+    background: linear-gradient(150deg, rgba(75, 29, 149, 0.12), rgba(245, 158, 11, 0.12));
+  }
+</style>

@@ -1,14 +1,42 @@
 ---
+import '../styles/globals.css';
 import Nav from './Nav.astro';
 import Footer from './Footer.astro';
+
+const {
+  title = 'Sangeet Saadhna',
+  description = 'Community celebrating Indian classical music and monthly gatherings.',
+  image = `${import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321'}/og-image.jpg`,
+  structuredData = {},
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
 ---
 
 <html lang="en">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {Object.keys(structuredData).length > 0 && (
+      <script is:inline type="application/ld+json">{JSON.stringify(structuredData)}</script>
+    )}
     <slot name="head" />
   </head>
   <body>
-    <Nav />
+    <Nav currentPath={currentPath} />
     <main>
       <slot />
     </main>

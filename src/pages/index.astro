@@ -1,7 +1,427 @@
 ---
 import Layout from '../components/Layout.astro';
+import CTA from '../components/CTA.astro';
+import CardEvent from '../components/CardEvent.astro';
+import {
+  fetchPastEvents,
+  fetchSiteSettings,
+  fetchUpcomingEvents,
+} from '../lib/sanityQueries';
+
+const canUseSanity =
+  Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
+
+let siteSettings: Awaited<ReturnType<typeof fetchSiteSettings>> | null = null;
+let upcomingEvents: Awaited<ReturnType<typeof fetchUpcomingEvents>> =
+  [] as Awaited<ReturnType<typeof fetchUpcomingEvents>>;
+let pastEvents: Awaited<ReturnType<typeof fetchPastEvents>> =
+  [] as Awaited<ReturnType<typeof fetchPastEvents>>;
+
+if (canUseSanity) {
+  try {
+    [siteSettings, upcomingEvents, pastEvents] = await Promise.all([
+      fetchSiteSettings(),
+      fetchUpcomingEvents(),
+      fetchPastEvents(),
+    ]);
+  } catch (error) {
+    console.warn('Failed to fetch Sanity content for homepage', error);
+  }
+}
+
+const typedUpcoming = (upcomingEvents ?? []) as any[];
+const typedPast = (pastEvents ?? []) as any[];
+
+const featuredEvent =
+  typedUpcoming.find((event: any) => event.isFeatured || event.isMonthlyProgram) ??
+  typedUpcoming[0] ??
+  null;
+
+const videoHighlights =
+  typedPast
+    ?.filter((event: any) => Boolean(event.youtubeUrl))
+    .slice(0, 3)
+    .map((event: any) => {
+      const embedId = extractYouTubeId(event.youtubeUrl || '');
+      return { ...event, embedId };
+    })
+    .filter((event: any) => Boolean(event.embedId)) ?? [];
+
+const fallbackDescription =
+  siteSettings?.tagline ??
+  'A volunteer-driven sabha celebrating Indian classical music through monthly community baithaks, workshops, and cultural dialogues in the Bay Area.';
+
+const heroTitle =
+  siteSettings?.title ?? 'Sangeet Saadhna — Indian Classical Devotional Music Community';
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'PerformingGroup',
+  name: siteSettings?.title ?? 'Sangeet Saadhna',
+  description: fallbackDescription,
+  areaServed: 'San Francisco Bay Area',
+  url: import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321',
+};
+
+function extractYouTubeId(url: string) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('youtu.be')) {
+      return parsed.pathname.replace('/', '');
+    }
+    if (parsed.searchParams.has('v')) {
+      return parsed.searchParams.get('v');
+    }
+    if (parsed.pathname.startsWith('/embed/')) {
+      return parsed.pathname.replace('/embed/', '');
+    }
+  } catch (error) {
+    return null;
+  }
+  return null;
+}
 ---
 
-<Layout>
-  <h1>Welcome to Sangeet Saadhna</h1>
+<Layout title={heroTitle} description={fallbackDescription} structuredData={structuredData}>
+  <section class="hero section">
+    <div class="container hero__grid">
+      <div class="hero__content">
+        <span class="hero__eyebrow">Community Sangeet Sabha</span>
+        <h1>{heroTitle}</h1>
+        <p>
+          {fallbackDescription}
+        </p>
+        <div class="hero__actions">
+          <a class="btn" href="/events">
+            View monthly programs
+          </a>
+          <a class="btn outline" href="/donation">
+            Support the sabha
+          </a>
+        </div>
+      </div>
+      <div class="hero__media">
+        <div class="hero__card">
+          <h3>Next Baithak</h3>
+          {featuredEvent ? (
+            <>
+              <p>
+                <strong>{featuredEvent.title}</strong>
+              </p>
+              <p>
+                {featuredEvent.startDate
+                  ? new Intl.DateTimeFormat('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    }).format(new Date(featuredEvent.startDate))
+                  : 'Date to be announced'}
+              </p>
+              {featuredEvent.location && <p>{featuredEvent.location}</p>}
+              <a class="btn" href={`/events/${featuredEvent.slug}`}>
+                Save my seat
+              </a>
+            </>
+          ) : (
+            <>
+              <p>
+                Monthly programs and workshops bring artists, students, and rasikas together. Stay
+                tuned for the next announcement.
+              </p>
+              <a class="btn" href="/contact">
+                Join the mailing list
+              </a>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <header class="section__header">
+        <div>
+          <span class="eyebrow">Celebrate &amp; Learn</span>
+          <h2>Featured community moments</h2>
+        </div>
+        <p class="section__lede">
+          Monthly baithaks, immersive workshops, and spontaneous jam sessions keep our heritage
+          alive. Catch up on the highlights or relive the energy of past gatherings.
+        </p>
+      </header>
+
+      {featuredEvent ? (
+        <CardEvent event={featuredEvent} variant="featured" />
+      ) : (
+        <div class="card empty-state">
+          <h3>Events coming soon</h3>
+          <p>
+            We are curating the upcoming season calendar. Sign up to hear when the next baithak is
+            announced.
+          </p>
+          <a class="btn" href="/contact">Get updates</a>
+        </div>
+      )}
+    </div>
+  </section>
+
+  {videoHighlights.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <header class="section__header">
+          <div>
+            <span class="eyebrow">Watch &amp; share</span>
+            <h2>Recent performances</h2>
+          </div>
+          <a class="btn outline" href="https://youtube.com" target="_blank" rel="noreferrer">
+            View our YouTube channel
+          </a>
+        </header>
+        <div class="video-grid">
+          {videoHighlights.map((event: any) => (
+            <article class="video-card">
+              <div class="video-card__frame">
+                <iframe
+                  src={`https://www.youtube.com/embed/${event.embedId}`}
+                  title={`YouTube video player for ${event.title}`}
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                />
+              </div>
+              <div class="video-card__body">
+                <h3>{event.title}</h3>
+                {event.startDate && (
+                  <p class="video-card__date">
+                    {new Intl.DateTimeFormat('en-US', {
+                      month: 'long',
+                      year: 'numeric',
+                    }).format(new Date(event.startDate))}
+                  </p>
+                )}
+                {event.shortDescription && <p>{event.shortDescription}</p>}
+                <a class="btn outline" href={`/events/${event.slug}`}>
+                  Event details
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--split">
+    <div class="container split-grid">
+      <article class="card split-card">
+        <span class="eyebrow">Our Mission</span>
+        <h2>Passing on the gift of Indian classical music</h2>
+        <p>
+          We are a volunteer-led community offering a stage for emerging and established artists,
+          connecting students with gurus, and creating a welcoming space for rasikas to explore the
+          nuances of Hindustani and Carnatic traditions.
+        </p>
+        <ul>
+          <li>Monthly community baithaks featuring vocal, instrumental, and dance showcases</li>
+          <li>Workshops, lecture demonstrations, and riyaz circles for seekers of all ages</li>
+          <li>Scholarships and instrument funds powered by community donations</li>
+        </ul>
+        <a class="btn" href="/mission">Explore our mission</a>
+      </article>
+      <article class="card split-card">
+        <span class="eyebrow">Volunteer spotlight</span>
+        <h2>Driven by families, guided by gurus</h2>
+        <p>
+          Organizers, emcees, and volunteers make every event possible—from stage decor and prasad
+          to sound engineering. If you’d like to lend your skills, we’d love to have you.
+        </p>
+        <CTA
+          variant="outline"
+          heading="Raise your hand to volunteer or host a session."
+          body="We welcome performers, teachers, photographers, and community partners. Share how you’d like to contribute."
+          buttonLabel="Volunteer with the sabha"
+          buttonHref="/contact"
+        />
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <CTA
+        eyebrow="Support the sabha"
+        heading="Your generosity keeps monthly programs free and accessible."
+        body="Funds help us host artists, rent venues, and run scholarships for budding maestros. Choose a donation option that resonates with you."
+        buttonLabel="View donation options"
+        buttonHref="/donation"
+      />
+    </div>
+  </section>
 </Layout>
+
+<style>
+  .hero {
+    padding-top: clamp(4rem, 12vw, 7rem);
+    background: radial-gradient(circle at top left, rgba(75, 29, 149, 0.12), transparent 55%),
+      var(--color-surface);
+  }
+
+  .hero__grid {
+    display: grid;
+    gap: clamp(2rem, 6vw, 4rem);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: center;
+  }
+
+  .hero__content h1 {
+    font-size: clamp(2.4rem, 4vw, 3.25rem);
+    margin-bottom: 1rem;
+  }
+
+  .hero__content p {
+    max-width: 50ch;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero__eyebrow {
+    display: inline-flex;
+    letter-spacing: 0.25em;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--color-secondary);
+    margin-bottom: 1.1rem;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .hero__media {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .hero__card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: clamp(1.5rem, 4vw, 2.4rem);
+    max-width: 360px;
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .hero__card p {
+    color: var(--color-text-muted);
+  }
+
+  .section__header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1.5rem;
+    margin-bottom: clamp(2rem, 5vw, 3rem);
+  }
+
+  .section__header h2 {
+    font-size: clamp(1.8rem, 3vw, 2.3rem);
+  }
+
+  .section__lede {
+    max-width: 50ch;
+    color: var(--color-text-muted);
+  }
+
+  .eyebrow {
+    display: inline-block;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+    margin-bottom: 0.6rem;
+  }
+
+  .empty-state {
+    display: grid;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .video-grid {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .video-card {
+    display: grid;
+    gap: 1rem;
+    background: rgba(255, 251, 242, 0.95);
+    border-radius: var(--radius-base);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .video-card__frame {
+    position: relative;
+    padding-top: 56.25%;
+    background: #020617;
+  }
+
+  .video-card__frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .video-card__body {
+    padding: 1.1rem 1.5rem 1.5rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .video-card__date {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .split-grid {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 2.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .split-card ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.5rem;
+    color: var(--color-text-muted);
+  }
+
+  .section--split {
+    background: linear-gradient(120deg, rgba(75, 29, 149, 0.05), rgba(13, 148, 136, 0.08));
+  }
+
+  @media (max-width: 720px) {
+    .hero__media {
+      justify-content: flex-start;
+    }
+
+    .hero__card {
+      width: 100%;
+    }
+  }
+</style>

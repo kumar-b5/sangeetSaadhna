@@ -1,9 +1,360 @@
 ---
-export interface Props {
-  slug: string;
+import Layout from '../../components/Layout.astro';
+import CTA from '../../components/CTA.astro';
+import {
+  fetchEventBySlug,
+  fetchPastEvents,
+  fetchUpcomingEvents,
+} from '../../lib/sanityQueries';
+import { renderPortableText } from '../../lib/portableText';
+
+export const prerender = true;
+
+const canUseSanity =
+  Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
+
+export async function getStaticPaths() {
+  const canUseSanityForPaths =
+    Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
+  if (!canUseSanityForPaths) return [];
+  try {
+    const [upcoming, past] = await Promise.all([
+      fetchUpcomingEvents(),
+      fetchPastEvents(),
+    ]);
+    const events = [...(upcoming ?? []), ...(past ?? [])] as any[];
+
+    return events
+      .filter((event: any) => Boolean(event.slug))
+      .map((event: any) => ({
+        params: { slug: event.slug },
+      }));
+  } catch (error) {
+    console.warn('Failed to build static paths for events', error);
+    return [];
+  }
 }
 
 const { slug } = Astro.params;
+
+let eventData = null;
+if (canUseSanity) {
+  try {
+    eventData = await fetchEventBySlug(slug);
+  } catch (error) {
+    console.warn('Failed to fetch event', slug, error);
+  }
+}
+
+if (!eventData) {
+  eventData = {
+    title: 'Event not found',
+    shortDescription: 'This event may have been unpublished or moved.',
+  };
+}
+
+const youtubeId = eventData.youtubeUrl ? extractYouTubeId(eventData.youtubeUrl) : null;
+const heroImage = eventData.heroImage?.asset?.url ?? null;
+
+const formattedDate = eventData.startDate
+  ? new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(eventData.startDate))
+  : null;
+
+const endDate = eventData.endDate
+  ? new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(eventData.endDate))
+  : null;
+
+const structuredData =
+  eventData.startDate && eventData.location
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'MusicEvent',
+        name: eventData.title,
+        description: eventData.shortDescription,
+        startDate: eventData.startDate,
+        endDate: eventData.endDate,
+        location: {
+          '@type': 'Place',
+          name: eventData.location,
+        },
+        eventStatus: 'https://schema.org/EventScheduled',
+      }
+    : undefined;
+
+function extractYouTubeId(url: string) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('youtu.be')) {
+      return parsed.pathname.replace('/', '');
+    }
+    if (parsed.searchParams.has('v')) {
+      return parsed.searchParams.get('v');
+    }
+    if (parsed.pathname.startsWith('/embed/')) {
+      return parsed.pathname.replace('/embed/', '');
+    }
+  } catch (error) {
+    return null;
+  }
+  return null;
+}
 ---
 
-<h1>Event: {slug}</h1>
+<Layout
+  title={`${eventData.title} | Sangeet Saadhna`}
+  description={eventData.shortDescription}
+  structuredData={structuredData}
+>
+  <section class="section event-hero">
+    <div class="container event-hero__grid">
+      <div class="event-hero__info">
+        <span class="eyebrow">{eventData.isMonthlyProgram ? 'Monthly Program' : 'Special Event'}</span>
+        <h1>{eventData.title}</h1>
+        {formattedDate && (
+          <p class="event-hero__date">
+            {formattedDate}
+            {endDate && (
+              <span>
+                {' '}
+                &ndash; {endDate}
+              </span>
+            )}
+          </p>
+        )}
+        {eventData.location && <p class="event-hero__location">{eventData.location}</p>}
+        {eventData.shortDescription && <p class="event-hero__summary">{eventData.shortDescription}</p>}
+        <div class="event-hero__actions">
+          <a class="btn" href="/contact">
+            RSVP / Questions
+          </a>
+          {eventData.youtubeUrl && (
+            <a class="btn outline" href={eventData.youtubeUrl} target="_blank" rel="noreferrer">
+              Watch recording
+            </a>
+          )}
+        </div>
+      </div>
+      <div class="event-hero__media">
+        {youtubeId ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}`}
+            title={`Recording of ${eventData.title}`}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          />
+        ) : heroImage ? (
+          <img src={heroImage} alt={eventData.title} loading="lazy" decoding="async" />
+        ) : (
+          <div class="event-hero__placeholder">
+            <span>Event footage coming soon</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  {(eventData.body || eventData.schedule?.length > 0) && (
+    <section class="section">
+      <div class="container event-body">
+        {eventData.body && (
+          <div class="event-body__content" set:html={renderPortableText(eventData.body)} />
+        )}
+        {eventData.schedule?.length > 0 && (
+          <aside class="event-body__schedule card">
+            <h2>Program schedule</h2>
+            <ol>
+              {eventData.schedule.map((item: any) => (
+                <li>
+                  <div class="schedule-time">
+                    {item.startTime && <span>{item.startTime}</span>}
+                    {item.endTime && <span> &ndash; {item.endTime}</span>}
+                  </div>
+                  <div>
+                    <strong>{item.artist}</strong>
+                    {item.role && <span class="schedule-role"> &middot; {item.role}</span>}
+                  </div>
+                  {item.notes && <p>{item.notes}</p>}
+                </li>
+              ))}
+            </ol>
+          </aside>
+        )}
+      </div>
+    </section>
+  )}
+
+  {eventData.gallery?.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <span class="eyebrow">Gallery</span>
+        <h2>Moments from the gathering</h2>
+        <div class="gallery-grid">
+          {eventData.gallery.map((item: any) => (
+            <figure>
+              <img src={item.asset?.url} alt={item.caption ?? eventData.title} loading="lazy" />
+              {item.caption && <figcaption>{item.caption}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="container">
+      <CTA
+        eyebrow="Bring music home"
+        heading="Would you like to host a house baithak or sponsor an artist?"
+        body="Extend the sabha experience to your neighborhood. We’ll work with you to curate artists and logistics."
+        buttonLabel="Start the conversation"
+        buttonHref="/contact"
+      />
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .event-hero {
+    background: radial-gradient(circle at top left, rgba(75, 29, 149, 0.12), transparent 55%);
+    padding-top: clamp(4rem, 10vw, 6rem);
+  }
+
+  .event-hero__grid {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .event-hero__info {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .event-hero__date {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+  }
+
+  .event-hero__location {
+    color: var(--color-text-muted);
+  }
+
+  .event-hero__summary {
+    color: var(--color-text-muted);
+    max-width: 50ch;
+  }
+
+  .event-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .event-hero__media {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    min-height: 280px;
+    background: #020617;
+  }
+
+  .event-hero__media iframe,
+  .event-hero__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+  }
+
+  .event-hero__placeholder {
+    display: grid;
+    place-items: center;
+    color: rgba(226, 232, 240, 0.85);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    height: 100%;
+  }
+
+  .event-body {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .event-body__content {
+    display: grid;
+    gap: 1rem;
+    color: var(--color-text-muted);
+  }
+
+  .event-body__content h2,
+  .event-body__content h3 {
+    color: var(--color-text);
+  }
+
+  .event-body__schedule {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .event-body__schedule ol {
+    margin: 0;
+    padding-left: 1.5rem;
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .event-body__schedule li {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .schedule-time {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+  }
+
+  .schedule-role {
+    color: var(--color-text-muted);
+  }
+
+  .gallery-grid {
+    margin-top: 2rem;
+    display: grid;
+    gap: clamp(1rem, 3vw, 1.75rem);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .gallery-grid figure {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .gallery-grid figcaption {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  @media (min-width: 900px) {
+    .event-body {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      align-items: start;
+    }
+  }
+</style>

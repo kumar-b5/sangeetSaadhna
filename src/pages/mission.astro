@@ -1,0 +1,99 @@
+---
+import Layout from '../components/Layout.astro';
+import PageSection from '../components/PageSection.astro';
+import CTA from '../components/CTA.astro';
+import { fetchPageBySlug, fetchSiteSettings } from '../lib/sanityQueries';
+
+const slug = 'mission';
+const canUseSanity =
+  Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
+
+let page = null;
+let siteSettings = null;
+
+if (canUseSanity) {
+  try {
+    [page, siteSettings] = await Promise.all([
+      fetchPageBySlug(slug),
+      fetchSiteSettings(),
+    ]);
+  } catch (error) {
+    console.warn(`Failed to fetch Sanity content for ${slug} page`, error);
+  }
+}
+
+const title = page?.heroTitle ?? 'Our Mission';
+const intro =
+  page?.heroSubtitle ??
+  'We cultivate a welcoming sabha where knowledge flows between gurus, students, and rasikas, safeguarding classical traditions while encouraging new expressions.';
+
+const guidingPrinciples = [
+  'Access: Monthly gatherings are free or donation-based so every family can participate.',
+  'Mentorship: Pairing young musicians with gurus and senior performers for sustained guidance.',
+  'Diversity: Showcasing Hindustani and Carnatic styles, vocal and instrumental, traditional and contemporary.',
+  'Community: Encouraging families to volunteer, host artists, and share hospitality.',
+];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'NGO',
+  name: siteSettings?.title ?? 'Sangeet Saadhna',
+  mission: intro,
+};
+---
+
+<Layout title={`${title} | Sangeet Saadhna`} description={intro} structuredData={structuredData}>
+  <PageSection
+    eyebrow="Mission"
+    title={title}
+    intro={intro}
+    content={page?.blocks}
+  >
+    {!page?.blocks && (
+      <div class="mission-fallback">
+        <h2>Guiding Principles</h2>
+        <ul>
+          {guidingPrinciples.map((principle) => (
+            <li>{principle}</li>
+          ))}
+        </ul>
+        <h2>How we deliver impact</h2>
+        <p>
+          Donations and volunteer time directly support scholarships, artist honorariums, travel
+          stipends, venue rentals, and archival work that preserves each performance.
+        </p>
+        <p>
+          We partner with gurus, music schools, and cultural organizations to create immersive
+          learning experiences—from tanpura meditation circles to advanced tala workshops.
+        </p>
+      </div>
+    )}
+  </PageSection>
+
+  <section class="section">
+    <div class="container">
+      <CTA
+        eyebrow="Volunteer"
+        heading="Help curate the next season of baithaks."
+        body="Program coordinators, MCs, designers, audio engineers, photographers, and hospitality leads keep the sabha running. Let us know how you’d like to contribute."
+        buttonLabel="Volunteer with us"
+        buttonHref="/contact"
+      />
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .mission-fallback {
+    display: grid;
+    gap: 1.2rem;
+    color: var(--color-text-muted);
+  }
+
+  .mission-fallback ul {
+    margin: 0;
+    padding-left: 1.4rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+</style>

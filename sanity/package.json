@@ -1,0 +1,14 @@
+{
+  "name": "sangeet-saadhna-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy"
+  },
+  "dependencies": {
+    "sanity": "^3.59.0"
+  }
+}
+

@@ -1,7 +1,105 @@
 ---
 import Layout from '../components/Layout.astro';
+import PageSection from '../components/PageSection.astro';
+import {
+  fetchPageBySlug,
+  fetchSiteSettings,
+} from '../lib/sanityQueries';
+
+const slug = 'about';
+const canUseSanity =
+  Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
+
+let page = null;
+let siteSettings = null;
+
+if (canUseSanity) {
+  try {
+    [page, siteSettings] = await Promise.all([
+      fetchPageBySlug(slug),
+      fetchSiteSettings(),
+    ]);
+  } catch (error) {
+    console.warn(`Failed to fetch Sanity content for ${slug} page`, error);
+  }
+}
+
+const title = page?.heroTitle ?? 'About Sangeet Saadhna';
+const intro =
+  page?.heroSubtitle ??
+  'Founded by rasikas and music educators, Sangeet Saadhna is a volunteer-driven sabha nurturing Indian classical traditions in the Bay Area.';
+
+const cta =
+  page?.cta ?? {
+    heading: 'Share your story or host a baithak with us.',
+    body: 'We welcome collaborations with gurus, schools, cultural organizations, and venues that align with our mission.',
+    buttonLabel: 'Collaborate with us',
+    buttonHref: '/contact',
+  };
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: siteSettings?.title ?? 'Sangeet Saadhna',
+  description: intro,
+  url: import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321',
+};
 ---
 
-<Layout>
-  <h1>About Sangeet Saadhna</h1>
+<Layout title={`${title} | Sangeet Saadhna`} description={intro} structuredData={structuredData}>
+  <PageSection eyebrow="Our Story" title={title} intro={intro} content={page?.blocks} cta={cta}>
+    {!page?.blocks && (
+      <div class="page-fallback">
+        <p>
+          What began as a living-room baithak has grown into a thriving sabha where artists, students,
+          and rasikas gather every month to celebrate the traditions of Hindustani and Carnatic music.
+        </p>
+        <p>
+          The community is sustained by volunteers who coordinate programming, curate artists,
+          welcome new families, and document each gathering. Our values are rooted in respect for the
+          guru-shishya parampara, openness to experimentation, and a deep love of raag and taal.
+        </p>
+        <h2>What we do</h2>
+        <ul>
+          <li>Host monthly baithaks featuring vocalists, instrumentalists, and dancers</li>
+          <li>Provide stage exposure and mentorship for youth and emerging artists</li>
+          <li>Offer lecture demonstrations, riyaz circles, and workshops with visiting gurus</li>
+          <li>Document performances to grow an accessible archive of community talent</li>
+        </ul>
+        <blockquote>
+          “Sangeet Saadhna has become a second home for our musical family. The warmth, the rigor, and
+          the rasa we experience each month keep us inspired.” — Community member
+        </blockquote>
+      </div>
+    )}
+  </PageSection>
 </Layout>
+
+<style>
+  .page-fallback {
+    display: grid;
+    gap: 1.1rem;
+    line-height: 1.75;
+    color: var(--color-text-muted);
+  }
+
+  .page-fallback h2 {
+    color: var(--color-text);
+    margin-top: 1.5rem;
+  }
+
+  .page-fallback ul {
+    margin: 0;
+    padding-left: 1.4rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .page-fallback blockquote {
+    padding: 1.5rem 1.8rem;
+    background: rgba(75, 29, 149, 0.1);
+    border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius-base);
+    font-style: italic;
+  }
+</style>

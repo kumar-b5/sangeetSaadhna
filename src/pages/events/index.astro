@@ -1,0 +1,189 @@
+---
+import Layout from '../../components/Layout.astro';
+import CardEvent from '../../components/CardEvent.astro';
+import CTA from '../../components/CTA.astro';
+import {
+  fetchPastEvents,
+  fetchSiteSettings,
+  fetchUpcomingEvents,
+} from '../../lib/sanityQueries';
+
+const canUseSanity =
+  Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
+
+let upcomingEvents: Awaited<ReturnType<typeof fetchUpcomingEvents>> =
+  [] as Awaited<ReturnType<typeof fetchUpcomingEvents>>;
+let pastEvents: Awaited<ReturnType<typeof fetchPastEvents>> =
+  [] as Awaited<ReturnType<typeof fetchPastEvents>>;
+let siteSettings: Awaited<ReturnType<typeof fetchSiteSettings>> | null = null;
+
+if (canUseSanity) {
+  try {
+    [upcomingEvents, pastEvents, siteSettings] = await Promise.all([
+      fetchUpcomingEvents(),
+      fetchPastEvents(),
+      fetchSiteSettings(),
+    ]);
+  } catch (error) {
+    console.warn('Failed to fetch Sanity content for events index', error);
+  }
+}
+
+const title = 'Events & Monthly Programs';
+const description =
+  'Explore upcoming community baithaks, workshops, and festival celebrations. Catch up on highlights from past performances and dive into the recordings.';
+
+const typedUpcomingEvents = (upcomingEvents ?? []) as any[];
+const monthlyProgram = typedUpcomingEvents.find((event: any) => event.isMonthlyProgram) ?? typedUpcomingEvents[0];
+const otherUpcoming = typedUpcomingEvents.filter((event: any) => event !== monthlyProgram);
+---
+
+<Layout title={`${title} | Sangeet Saadhna`} description={description}>
+  <section class="section">
+    <div class="container events-hero">
+      <div>
+        <span class="eyebrow">Events</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </div>
+      <CTA
+        variant="outline"
+        heading="Would you like to perform or host a workshop?"
+        body="Share your interest or recommend an artist. Our programming team will follow up to learn more."
+        buttonLabel="Submit an interest form"
+        buttonHref="/contact"
+      />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container events-grid">
+      <div class="events-column">
+        <header class="events-header">
+          <span class="eyebrow">Upcoming</span>
+          <h2>Monthly program</h2>
+          <p>
+            Save the date for our next gathering. Monthly baithaks feature performances across vocal,
+            instrumental, and dance traditions with audience interaction.
+          </p>
+        </header>
+        {monthlyProgram ? (
+          <CardEvent event={monthlyProgram} variant="featured" />
+        ) : (
+          <div class="card empty">
+            <h3>Next program announced soon</h3>
+            <p>
+              Subscribe to our newsletter to be notified when the next monthly baithak is scheduled.
+            </p>
+            <a class="btn" href="/contact">Join mailing list</a>
+          </div>
+        )}
+      </div>
+
+      <div class="events-column">
+        <header class="events-header">
+          <span class="eyebrow">Upcoming</span>
+          <h2>Workshops & community gatherings</h2>
+          <p>
+            Beyond the core monthly program we host visiting gurus, lecture-demonstrations, and
+            thematic festivals with partner organizations.
+          </p>
+        </header>
+        <div class="events-list">
+          {otherUpcoming.length > 0 ? (
+            otherUpcoming.map((event: any) => <CardEvent event={event} />)
+          ) : (
+            <div class="card empty">
+              <p>No additional events scheduled yet. Check back soon!</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <header class="section__header">
+        <div>
+          <span class="eyebrow">Past recordings</span>
+          <h2>Celebrate recent highlights</h2>
+        </div>
+        <a class="btn outline" href="https://youtube.com" target="_blank" rel="noreferrer">
+          Watch on YouTube
+        </a>
+      </header>
+      <div class="past-grid">
+        {pastEvents.length > 0 ? (
+          (pastEvents as any[]).map((event: any) => <CardEvent event={event} />)
+        ) : (
+          <div class="card empty">
+            <p>We’re archiving recordings from recent programs. Check back shortly!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <CTA
+        eyebrow="Stay in the loop"
+        heading="Receive program lineups, volunteer calls, and recap videos each month."
+        body={
+          siteSettings?.newsletterCta?.body ??
+          'Add your email to our list and we’ll send a curated note ahead of each community gathering.'
+        }
+        buttonLabel={siteSettings?.newsletterCta?.buttonLabel ?? 'Subscribe'}
+        buttonHref={siteSettings?.newsletterCta?.buttonHref ?? '/contact'}
+      />
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .events-hero {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .events-grid {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .events-column {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .events-header {
+    display: grid;
+    gap: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .events-list {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .past-grid {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .empty {
+    display: grid;
+    gap: 0.75rem;
+    text-align: center;
+    color: var(--color-text-muted);
+  }
+
+  @media (min-width: 900px) {
+    .events-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

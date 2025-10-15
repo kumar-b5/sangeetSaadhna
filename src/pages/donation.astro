@@ -1,0 +1,141 @@
+---
+import Layout from '../components/Layout.astro';
+import PageSection from '../components/PageSection.astro';
+import CTA from '../components/CTA.astro';
+import { fetchPageBySlug, fetchSiteSettings } from '../lib/sanityQueries';
+
+const slug = 'donation';
+const canUseSanity =
+  Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
+
+let page = null;
+let siteSettings = null;
+
+if (canUseSanity) {
+  try {
+    [page, siteSettings] = await Promise.all([
+      fetchPageBySlug(slug),
+      fetchSiteSettings(),
+    ]);
+  } catch (error) {
+    console.warn(`Failed to fetch Sanity content for ${slug} page`, error);
+  }
+}
+
+const title = page?.heroTitle ?? 'Support Sangeet Saadhna';
+const intro =
+  page?.heroSubtitle ??
+  'Donations keep our monthly programs free, fund artist honorariums, and expand scholarships for students pursuing Indian classical music.';
+
+const donationOptions =
+  siteSettings?.donationOptions?.length > 0
+    ? siteSettings.donationOptions
+    : [
+        {
+          title: 'Monthly Patron',
+          description:
+            'Commit to sustaining baithaks with a recurring donation covering venue and hospitality costs.',
+          link: '#',
+        },
+        {
+          title: 'Artist Honorarium Fund',
+          description:
+            'Sponsor honorariums and travel for guest gurus, accompanists, and emerging performers.',
+          link: '#',
+        },
+        {
+          title: 'Scholarship & Instrument Fund',
+          description:
+            'Provide scholarships for students, instrument maintenance, and workshop subsidies.',
+          link: '#',
+        },
+      ];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'DonateAction',
+  name: title,
+  description: intro,
+  recipient: {
+    '@type': 'Organization',
+    name: siteSettings?.title ?? 'Sangeet Saadhna',
+  },
+};
+---
+
+<Layout title={`${title} | Sangeet Saadhna`} description={intro} structuredData={structuredData}>
+  <PageSection
+    eyebrow="Donation"
+    title={title}
+    intro={intro}
+    content={page?.blocks}
+  >
+    {!page?.blocks && (
+      <div class="donation-fallback">
+        <p>
+          Your support ensures artists receive fair honorariums, venues remain accessible, and our
+          archive of performances continues to grow for future rasikas.
+        </p>
+      </div>
+    )}
+  </PageSection>
+
+  <section class="section">
+    <div class="container donation-grid">
+      {donationOptions.map((option: any) => (
+        <article class="card donation-card">
+          <h2>{option.title}</h2>
+          {option.description && <p>{option.description}</p>}
+          {option.qrCode && <img src={option.qrCode} alt={`${option.title} QR`} loading="lazy" />}
+          {option.link && option.link !== '#' ? (
+            <a class="btn" href={option.link} target="_blank" rel="noreferrer">
+              Contribute
+            </a>
+          ) : (
+            <a class="btn outline" href="/contact">
+              Coordinate contribution
+            </a>
+          )}
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <CTA
+        eyebrow="Corporate Giving"
+        heading="Interested in sponsoring a season or workshop series?"
+        body="We collaborate with cultural organizations and CSR programs to host visiting maestros, children’s showcases, and lecture-demonstrations."
+        buttonLabel="Discuss partnership"
+        buttonHref="/contact"
+      />
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .donation-fallback {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+  }
+
+  .donation-grid {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .donation-card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .donation-card p {
+    color: var(--color-text-muted);
+  }
+
+  .donation-card img {
+    max-width: 180px;
+  }
+</style>
