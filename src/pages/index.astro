@@ -7,6 +7,7 @@ import {
   fetchSiteSettings,
   fetchUpcomingEvents,
 } from '../lib/sanityQueries';
+import { fetchYouTubeVideos } from '../lib/youtube';
 
 const canUseSanity =
   Boolean(import.meta.env.SANITY_PROJECT_ID) && Boolean(import.meta.env.SANITY_DATASET);
@@ -32,24 +33,48 @@ if (canUseSanity) {
 const typedUpcoming = (upcomingEvents ?? []) as any[];
 const typedPast = (pastEvents ?? []) as any[];
 
+const youtubeHighlights = await fetchYouTubeVideos(6);
+const youtubeChannelUrl = import.meta.env.YOUTUBE_CHANNEL_ID
+  ? `https://www.youtube.com/@sangeetsaadhna/channel/${import.meta.env.YOUTUBE_CHANNEL_ID}`
+  : 'https://www.youtube.com/@sangeetsaadhna';
+
 const featuredEvent =
   typedUpcoming.find((event: any) => event.isFeatured || event.isMonthlyProgram) ??
   typedUpcoming[0] ??
   null;
 
 const videoHighlights =
-  typedPast
-    ?.filter((event: any) => Boolean(event.youtubeUrl))
-    .slice(0, 3)
-    .map((event: any) => {
-      const embedId = extractYouTubeId(event.youtubeUrl || '');
-      return { ...event, embedId };
-    })
-    .filter((event: any) => Boolean(event.embedId)) ?? [];
+  youtubeHighlights.length > 0
+    ? youtubeHighlights.map((video) => ({
+        type: 'youtube' as const,
+        id: video.id,
+        title: video.title,
+        description: video.description,
+        publishedAt: video.publishedAt,
+        embedId: video.id,
+        youtubeUrl: `https://www.youtube.com/@sangeetsaadhna/watch?v=${video.id}`,
+      }))
+    : typedPast
+        ?.filter((event: any) => Boolean(event.youtubeUrl))
+        .slice(0, 3)
+        .map((event: any) => {
+          const embedId = extractYouTubeId(event.youtubeUrl || '');
+          return {
+            type: 'event' as const,
+            id: event.slug ?? embedId ?? event.title,
+            title: event.title,
+            description: event.shortDescription,
+            publishedAt: event.startDate,
+            embedId,
+            youtubeUrl: event.youtubeUrl,
+            slug: event.slug,
+          };
+        })
+        .filter((event: any) => Boolean(event.embedId)) ?? [];
 
 const fallbackDescription =
   siteSettings?.tagline ??
-  'A volunteer-driven sabha celebrating Indian classical music through monthly community baithaks, workshops, and cultural dialogues in the Bay Area.';
+  'A volunteer-driven sabha celebrating Indian classical music through monthly community bhajans, workshops, and cultural dialogues in Central Jersey.';
 
 const heroTitle =
   siteSettings?.title ?? 'Sangeet Saadhna — Indian Classical Devotional Music Community';
@@ -59,7 +84,7 @@ const structuredData = {
   '@type': 'PerformingGroup',
   name: siteSettings?.title ?? 'Sangeet Saadhna',
   description: fallbackDescription,
-  areaServed: 'San Francisco Bay Area',
+  areaServed: 'Central Jersey',
   url: import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321',
 };
 
@@ -80,6 +105,12 @@ function extractYouTubeId(url: string) {
   }
   return null;
 }
+
+function truncateDescription(value: string, maxLength = 140) {
+  if (!value) return '';
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength).trim()}…`;
+}
 ---
 
 <Layout title={heroTitle} description={fallbackDescription} structuredData={structuredData}>
@@ -95,14 +126,11 @@ function extractYouTubeId(url: string) {
           <a class="btn" href="/events">
             View monthly programs
           </a>
-          <a class="btn outline" href="/donation">
-            Support the sabha
-          </a>
         </div>
       </div>
       <div class="hero__media">
         <div class="hero__card">
-          <h3>Next Baithak</h3>
+          <h3>Next Bhajan</h3>
           {featuredEvent ? (
             <>
               <p>
@@ -127,7 +155,7 @@ function extractYouTubeId(url: string) {
           ) : (
             <>
               <p>
-                Monthly programs and workshops bring artists, students, and rasikas together. Stay
+                Monthly programs and workshops bring artists, students, and devotees together. Stay
                 tuned for the next announcement.
               </p>
               <a class="btn" href="/contact">
@@ -148,7 +176,7 @@ function extractYouTubeId(url: string) {
           <h2>Featured community moments</h2>
         </div>
         <p class="section__lede">
-          Monthly baithaks, immersive workshops, and spontaneous jam sessions keep our heritage
+          Monthly bhajans, immersive workshops, and spontaneous jam sessions keep our heritage
           alive. Catch up on the highlights or relive the energy of past gatherings.
         </p>
       </header>
@@ -159,7 +187,7 @@ function extractYouTubeId(url: string) {
         <div class="card empty-state">
           <h3>Events coming soon</h3>
           <p>
-            We are curating the upcoming season calendar. Sign up to hear when the next baithak is
+            We are curating the upcoming season calendar. Sign up to hear when the next bhajans is
             announced.
           </p>
           <a class="btn" href="/contact">Get updates</a>
@@ -176,36 +204,43 @@ function extractYouTubeId(url: string) {
             <span class="eyebrow">Watch &amp; share</span>
             <h2>Recent performances</h2>
           </div>
-          <a class="btn outline" href="https://youtube.com" target="_blank" rel="noreferrer">
+          <a class="btn outline" href={youtubeChannelUrl} target="_blank" rel="noreferrer">
             View our YouTube channel
           </a>
         </header>
         <div class="video-grid">
-          {videoHighlights.map((event: any) => (
+          {videoHighlights.map((video: any) => (
             <article class="video-card">
               <div class="video-card__frame">
                 <iframe
-                  src={`https://www.youtube.com/embed/${event.embedId}`}
-                  title={`YouTube video player for ${event.title}`}
+                  src={`https://www.youtube.com/@sangeetsaadhna/embed/${video.embedId}`}
+                  title={`YouTube video player for ${video.title}`}
                   loading="lazy"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowfullscreen
                 />
               </div>
               <div class="video-card__body">
-                <h3>{event.title}</h3>
-                {event.startDate && (
+                <h3>{video.title}</h3>
+                {video.publishedAt && (
                   <p class="video-card__date">
                     {new Intl.DateTimeFormat('en-US', {
                       month: 'long',
                       year: 'numeric',
-                    }).format(new Date(event.startDate))}
+                    }).format(new Date(video.publishedAt))}
                   </p>
                 )}
-                {event.shortDescription && <p>{event.shortDescription}</p>}
-                <a class="btn outline" href={`/events/${event.slug}`}>
-                  Event details
-                </a>
+                {video.description && <p>{truncateDescription(video.description)}</p>}
+                <div class="video-card__actions">
+                  <a class="btn outline" href={video.youtubeUrl} target="_blank" rel="noreferrer">
+                    Watch on YouTube
+                  </a>
+                  {video.type === 'event' && video.slug && (
+                    <a class="btn outline" href={`/events/${video.slug}`}>
+                      Event details
+                    </a>
+                  )}
+                </div>
               </div>
             </article>
           ))}
@@ -225,8 +260,8 @@ function extractYouTubeId(url: string) {
           nuances of Hindustani and Carnatic traditions.
         </p>
         <ul>
-          <li>Monthly community baithaks featuring vocal, instrumental, and dance showcases</li>
-          <li>Workshops, lecture demonstrations, and riyaz circles for seekers of all ages</li>
+          <li>Monthly community bhajans featuring vocal, instrumental, and dance showcases</li>
+          <li>Workshops, lecture demonstrations, and abhyas circles for seekers of all ages</li>
           <li>Scholarships and instrument funds powered by community donations</li>
         </ul>
         <a class="btn" href="/mission">Explore our mission</a>
@@ -249,17 +284,6 @@ function extractYouTubeId(url: string) {
     </div>
   </section>
 
-  <section class="section">
-    <div class="container">
-      <CTA
-        eyebrow="Support the sabha"
-        heading="Your generosity keeps monthly programs free and accessible."
-        body="Funds help us host artists, rent venues, and run scholarships for budding maestros. Choose a donation option that resonates with you."
-        buttonLabel="View donation options"
-        buttonHref="/donation"
-      />
-    </div>
-  </section>
 </Layout>
 
 <style>
