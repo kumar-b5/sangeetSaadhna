@@ -12,6 +12,22 @@ npm run dev
 - Studio: `cd sanity && npm install && npm run dev`
 - Firebase (optional): `cd ../firebase && firebase emulators:start`
 
+## Initial Setup on a New Machine
+
+1. Clone the repo and ensure Node.js 18+ plus npm are installed.
+2. Install root dependencies: `npm install`.
+3. Install Sanity Studio dependencies: `cd sanity && npm install`.
+4. Install Firebase Functions dependencies: `cd functions && npm install`.
+5. Copy `.env.local` (or create one) and populate the variables listed below for your environment.
+6. Install the Firebase CLI (`npm install -g firebase-tools`) and run `firebase login` if you plan to deploy or run emulators.
+7. (Optional) Run `firebase use sangeetsaadhna-fe7ac` to bind the CLI to the hosting project.
+
+After that:
+
+- `npm run dev` starts the Astro site.
+- `cd sanity && npm run dev` starts the CMS studio.
+- `cd functions && npm run serve` starts the Firebase Functions emulator once the CLI is configured.
+
 Environment variables live in `.env.local`. Minimum required:
 
 ```
@@ -25,6 +41,10 @@ VITE_FIREBASE_AUTH_DOMAIN=<value>
 VITE_FIREBASE_PROJECT_ID=sangeetsaadhna-fe7ac
 VITE_FIREBASE_APP_ID=<value>
 PUBLIC_SITE_URL=http://localhost:4321
+YOUTUBE_API_KEY=<youtube_data_api_v3_key>
+YOUTUBE_CHANNEL_ID=UCra7Oq4y-Y2-_kpKGHs-yYA
+SENDGRID_API_KEY=<sendgrid_api_key>
+RSVP_INBOX=team@sangeetsaadhna.org
 ```
 
 ## Commands

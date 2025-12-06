@@ -74,10 +74,10 @@ const videoHighlights =
 
 const fallbackDescription =
   siteSettings?.tagline ??
-  'A volunteer-driven sabha celebrating Indian classical music through monthly community bhajans, workshops, and cultural dialogues in Central Jersey.';
+  'A volunteer-driven sabha for Indian classical music with a special focus on Rajasthani folk songs and soulful Sunderkand recitation, bringing families together in Central Jersey.';
 
 const heroTitle =
-  siteSettings?.title ?? 'Sangeet Saadhna — Indian Classical Devotional Music Community';
+  siteSettings?.title ?? 'Sangeet Saadhna — Indian Classical, Rajasthani Folk & Sunderkand';
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -117,7 +117,7 @@ function truncateDescription(value: string, maxLength = 140) {
   <section class="hero section">
     <div class="container hero__grid">
       <div class="hero__content">
-        <span class="hero__eyebrow">Community Sangeet Sabha</span>
+        <span class="hero__eyebrow">Indian Classical | Rajasthani Folk | Sunderkand</span>
         <h1>{heroTitle}</h1>
         <p>
           {fallbackDescription}
@@ -173,11 +173,12 @@ function truncateDescription(value: string, maxLength = 140) {
       <header class="section__header">
         <div>
           <span class="eyebrow">Celebrate &amp; Learn</span>
-          <h2>Featured community moments</h2>
+          <h2>Featured classical, Rajasthani &amp; Sunderkand moments</h2>
         </div>
         <p class="section__lede">
-          Monthly bhajans, immersive workshops, and spontaneous jam sessions keep our heritage
-          alive. Catch up on the highlights or relive the energy of past gatherings.
+          Monthly bhajans, immersive workshops, Rajasthani lok geet, and community Sunderkand path
+          keep our heritage alive. Catch up on the highlights or relive the energy of past
+          gatherings.
         </p>
       </header>
 
@@ -257,10 +258,11 @@ function truncateDescription(value: string, maxLength = 140) {
         <p>
           We are a volunteer-led community offering a stage for emerging and established artists,
           connecting students with gurus, and creating a welcoming space for rasikas to explore the
-          nuances of Hindustani and Carnatic traditions.
+          nuances of Hindustani and Carnatic traditions—with a special spotlight on Rajasthani folk
+          songs and Sunderkand recitation.
         </p>
         <ul>
-          <li>Monthly community bhajans featuring vocal, instrumental, and dance showcases</li>
+          <li>Monthly community bhajans featuring vocal, instrumental, dance, Rajasthani lok geet, and Sunderkand path</li>
           <li>Workshops, lecture demonstrations, and abhyas circles for seekers of all ages</li>
           <li>Scholarships and instrument funds powered by community donations</li>
         </ul>
@@ -271,7 +273,8 @@ function truncateDescription(value: string, maxLength = 140) {
         <h2>Driven by families, guided by gurus</h2>
         <p>
           Organizers, emcees, and volunteers make every event possible—from stage decor and prasad
-          to sound engineering. If you’d like to lend your skills, we’d love to have you.
+          to sound engineering, Rajasthani folk sessions, and Sunderkand recitation. If you’d like
+          to lend your skills, we’d love to have you.
         </p>
         <CTA
           variant="outline"

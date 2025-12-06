@@ -69,8 +69,8 @@
 
 ## Phase 6 – Interactive Features (Firebase + Forms)
 1. **RSVP / Contact form**:
-   - Create Astro API route or Netlify-style endpoint that posts to Firebase Firestore or SendGrid.
-   - Implement hCaptcha/Recaptcha Lite for spam protection if needed.
+   - Astro API route (`src/pages/api/contact.ts`) posts to SendGrid when `SENDGRID_API_KEY` and `RSVP_INBOX` are available; extend with Firestore persistence if needed.
+   - Implement hCaptcha/Recaptcha Lite for spam protection if sending to public endpoints.
 2. **Newsletter signup**: Integrate Firebase (or alternative) to store emails; alternatively pipe to Google Sheets via Cloud Function.
 3. **Analytics**: Add Firebase Analytics or Google Analytics 4 with consent banner; ensure tracking respects privacy laws.
 4. **Authentication (future optional)**: Outline how to secure private media via Firebase Auth for members-only content.
@@ -85,6 +85,7 @@
 5. **Performance audit**: Lighthouse/Pagespeed for TTFB, LCP, CLS; ensure YouTube embeds use `loading="lazy"` and placeholder thumbnails.
 6. **Cross-browser QA**: Test on modern browsers + mobile devices; verify responsive breakpoints.
 7. **Validation scripts**: Run `npm run check` and `npm run check:a11y` locally prior to commit; CI enforces both.
+8. **External video feed**: YouTube channel uploads auto-populate via the Data API. Provide `YOUTUBE_API_KEY` and `YOUTUBE_CHANNEL_ID` in environment configs; monitor quota usage and refresh cache if needed.
 
 ## Phase 8 – Deployment & Operations
 1. **Build artifacts**: Confirm `npm run build` produces `dist/` aligned with Firebase Hosting config.

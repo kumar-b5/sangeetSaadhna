@@ -102,7 +102,7 @@ export default defineType({
       name: 'isMonthlyProgram',
       type: 'boolean',
       title: 'Monthly program',
-      description: 'Highlight as the current monthly baithak.',
+      description: 'Highlight as the current monthly bhajan.',
       initialValue: false,
     }),
     defineField({

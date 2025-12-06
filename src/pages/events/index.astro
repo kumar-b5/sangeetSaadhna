@@ -31,7 +31,7 @@ if (canUseSanity) {
 
 const title = 'Events & Monthly Programs';
 const description =
-  'Explore upcoming community baithaks, workshops, and festival celebrations. Catch up on highlights from past performances and dive into the recordings.';
+  'Explore upcoming community bhajans, workshops, and festival celebrations. Catch up on highlights from past performances and dive into the recordings.';
 
 const typedUpcomingEvents = (upcomingEvents ?? []) as any[];
 const monthlyProgram = typedUpcomingEvents.find((event: any) => event.isMonthlyProgram) ?? typedUpcomingEvents[0];
@@ -63,7 +63,7 @@ const otherUpcoming = typedUpcomingEvents.filter((event: any) => event !== month
           <span class="eyebrow">Upcoming</span>
           <h2>Monthly program</h2>
           <p>
-            Save the date for our next gathering. Monthly baithaks feature performances across vocal,
+            Save the date for our next gathering. Monthly bhajans feature performances across vocal,
             instrumental, and dance traditions with audience interaction.
           </p>
         </header>
@@ -73,7 +73,7 @@ const otherUpcoming = typedUpcomingEvents.filter((event: any) => event !== month
           <div class="card empty">
             <h3>Next program announced soon</h3>
             <p>
-              Subscribe to our newsletter to be notified when the next monthly baithak is scheduled.
+              Subscribe to our newsletter to be notified when the next monthly bhajans is scheduled.
             </p>
             <a class="btn" href="/contact">Join mailing list</a>
           </div>
@@ -109,7 +109,7 @@ const otherUpcoming = typedUpcomingEvents.filter((event: any) => event !== month
           <span class="eyebrow">Past recordings</span>
           <h2>Celebrate recent highlights</h2>
         </div>
-        <a class="btn outline" href="https://youtube.com" target="_blank" rel="noreferrer">
+        <a class="btn outline" href="https://youtube.com/@sangeetsaadhna" target="_blank" rel="noreferrer">
           Watch on YouTube
         </a>
       </header>
